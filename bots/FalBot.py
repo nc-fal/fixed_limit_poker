@@ -38,9 +38,9 @@ class FalBot(BotInterface):
                         HandType.THREEOFAKIND,
                         HandType.TWOPAIR]) and self.handInBest(observation.myHand, handTypeCards):
             return Action.RAISE
-
-        handPercent, cards = getHandPercent(
-            observation.myHand, observation.boardCards)
+        
+        # handPercent, cards = getHandPercent(
+        #     observation.myHand, observation.boardCards)
 
         # longestStraight = getLongestStraight(observation.myHand, observation.boardCards)[0]
         # if longestStraight == 4 and observation.stage.__index__() < 2:
@@ -64,13 +64,20 @@ class FalBot(BotInterface):
 
     def handlePostFlop(self, observation: Observation) -> Action:
         # get my hand's percent value (how good is the best 5 card hand i can make out of all possible 5 card hands)
+        opponentActions = observation.get_opponent_history_current_stage()
+        if len(opponentActions) > 0:
+            lastOpponenActionsIsRaise = opponentActions[-1] = Action.RAISE
+        else:
+            lastOpponenActionsIsRaise = False
         handPercent, cards = getHandPercent(
             observation.myHand, observation.boardCards)
         # if my hand is top 30 percent: raise
         if handPercent <= .30:
             return Action.RAISE
         # if my hand is top 80 percent: call
-        elif handPercent <= .80:
+        elif lastOpponenActionsIsRaise and handPercent <= .60:
+            return Action.CALL
+        elif not lastOpponenActionsIsRaise and handPercent <= .80:
             return Action.CALL
         # else fold
         return Action.FOLD
