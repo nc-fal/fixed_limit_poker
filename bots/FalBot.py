@@ -3,6 +3,7 @@ import random
 from typing import Sequence
 
 from bots.BotInterface import BotInterface
+from environment import observers
 from environment.Constants import Action, Stage
 from environment.Observation import Observation
 
@@ -30,7 +31,7 @@ class FalBot(BotInterface):
         '''
         handType, handTypeCards = getHandType(
             observation.myHand, observation.boardCards)
-
+        
         if handType in [HandType.STRAIGHTFLUSH,
                         HandType.FOUROFAKIND,
                         HandType.FULLHOUSE,
@@ -39,6 +40,13 @@ class FalBot(BotInterface):
                         HandType.THREEOFAKIND,
                         HandType.TWOPAIR]:
             return Action.RAISE
+
+        handPercent, cards = getHandPercent(
+            observation.myHand, observation.boardCards)
+
+        if handPercent > 0.9:
+            Action.FOLD
+        
         if observation.stage == Stage.PREFLOP:
             return self.handlePreFlop(observation)
 
