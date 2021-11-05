@@ -29,24 +29,22 @@ class FalBot(BotInterface):
                     action (Action): the action you want you bot to take. Possible actions are: FOLD, CHECK, CALL and RAISE
             If this function takes longer than 1 second, your bot will fold
         '''
-        handType, handTypeCards = getHandType(
-            observation.myHand, observation.boardCards)
-        
-        if handType in [HandType.STRAIGHTFLUSH,
+        handType, handTypeCards = getHandType(observation.myHand, observation.boardCards)
+        if (handType in [HandType.STRAIGHTFLUSH,
                         HandType.FOUROFAKIND,
                         HandType.FULLHOUSE,
                         HandType.FLUSH,
                         HandType.STRAIGHT,
                         HandType.THREEOFAKIND,
-                        HandType.TWOPAIR]:
+                        HandType.TWOPAIR]) and self.handInBest(observation.myHand, handTypeCards):
             return Action.RAISE
 
         handPercent, cards = getHandPercent(
             observation.myHand, observation.boardCards)
 
-        if handPercent > 0.9:
-            Action.FOLD
-        
+        # longestStraight = getLongestStraight(observation.myHand, observation.boardCards)[0]
+        # if longestStraight == 4 and observation.stage.__index__() < 2:
+        #     return Action.RAISE
         if observation.stage == Stage.PREFLOP:
             return self.handlePreFlop(observation)
 
@@ -54,9 +52,9 @@ class FalBot(BotInterface):
 
     def handlePreFlop(self, observation: Observation) -> Action:
         # get my hand's percent value (how good is this 2 card hand out of all possible 2 card hands)
-        handPercent, _ = getHandPercent(observation.myHand)
+        handPercent, cards = getHandPercent(observation.myHand)
         # if my hand is top 20 percent: raise
-        if handPercent < .20:
+        if handPercent < .20 and self.handInBest(observation.myHand, cards):
             return Action.RAISE
         # if my hand is top 60 percent: call
         elif handPercent < .60:
@@ -76,3 +74,9 @@ class FalBot(BotInterface):
             return Action.CALL
         # else fold
         return Action.FOLD
+
+    def handInBest(self, hand: Sequence[str], usedCards: list[str]) -> bool:
+        for c in hand:
+            if (c in usedCards):
+                return True
+        return False
